@@ -14,14 +14,24 @@ float eps = 1e-3;
 
 void UserInput(float& first_Coordinate_X, float& second_Coordinate_Y);
 bool IsInsideRectangle(float first_Coordinate_X, float second_Coordinate_Y);
-float Inclination(float& previous_Coordinate_Y, float& previous_Coordinate_X, float& first_Coordinate_X, float& second_Coordinate_Y, float& inclination, float eps);
-float Calculating_B(float& first_Coordinate_X, float& second_Coordinate_Y, float& inclination, float& b);
+float Inclination(float previous_Coordinate_Y, float previous_Coordinate_X, float first_Coordinate_X, float second_Coordinate_Y, float eps);
+float Calculating_B(float first_Coordinate_X, float second_Coordinate_Y, float inclination);
 void Crossing_Point(float& right_CP, float& left_CP, float& top_CP, float& bottom_CP, float inclination, float b);
-void RayMovementAndCoodinatesAdjustment(float previous_Coordinate_X, float previous_Coordinate_Y, float& first_Coordinate_X, float& second_Coordinate_Y, float right_CP,
+void RayMovementAndCoodinatesAdjustment(float& previous_Coordinate_X, float& previous_Coordinate_Y, float& first_Coordinate_X, float& second_Coordinate_Y, float right_CP,
 	float left_CP, float top_CP, float bottom_CP, float& temp_C_X, float& temp_C_Y);
-float Calculating_X(float& first_Coordinate_X, float& second_Coordinate_Y, float& previous_Coordinate_X, float& previous_Coordinate_Y, float& X, float temp_C_X, float temp_C_Y);
-float Distance(float& distance, float X);
+float Calculating_X(float first_Coordinate_X, float second_Coordinate_Y, float previous_Coordinate_X, float previous_Coordinate_Y);
+float Distance(float X);
 
+float callcDistance(float previous_Coordinate_X, float previous_Coordinate_Y, float& first_Coordinate_X, float& second_Coordinate_Y, float right_CP,
+	float left_CP, float top_CP, float bottom_CP, float& temp_C_X, float& temp_C_Y, float& eps)
+{
+	float inclination = Inclination(previous_Coordinate_Y, previous_Coordinate_X, first_Coordinate_X, second_Coordinate_Y, eps);
+	float b = Calculating_B(first_Coordinate_X, second_Coordinate_Y, inclination);
+	Crossing_Point(right_CP, left_CP, top_CP, bottom_CP, inclination, b);
+	RayMovementAndCoodinatesAdjustment(previous_Coordinate_X, previous_Coordinate_Y, first_Coordinate_X, second_Coordinate_Y, right_CP, left_CP, top_CP, bottom_CP, temp_C_X, temp_C_Y);
+	float X = Calculating_X(first_Coordinate_X, second_Coordinate_Y, previous_Coordinate_X, previous_Coordinate_Y);
+	return Distance(X);
+}
 int main()
 {
 	unsigned int input_Number = 0;
@@ -29,11 +39,7 @@ int main()
 	float second_Coordinate_Y = 0.0;
 	float previous_Coordinate_X = 0.0;		// This will store the value of coordinate X for the next cycle
 	float previous_Coordinate_Y = 0.0;		// This will store the value of coordinate Y for the next cycle
-	float X = 0.0;							// THis will store the value of X that is needed to calculate the distance from A to B
-	float distance = 0.0;					// Stores the distance made by the player
 	float total_Distance = 0.0;
-	float inclination = 0.0;
-	float b = 0.0;					//This is needed for calculating where the line crosses the rectangle and its from the formula y=(m*x)+b
 	float right_CP = 0.0;					//CP stands for CrossingPoint
 	float left_CP = 0.0;					//CP stands for CrossingPoint
 	float top_CP = 0.0;						//CP stands for CrossingPoint
@@ -45,57 +51,50 @@ int main()
 	while (true) {
 		cout << "Enter a positive whole number between 1 and 2,000,000,000: ";
 		cin >> input_Number;
-		if (input_Number >= 1 && input_Number <= 2000000000) {
+		if (input_Number >= 1 && input_Number < 2e9) {
 			break;
 		}
 	}
 
-	int a = 0;
-	while (a < input_Number) {
+	while (input_Number--) {
 		UserInput(first_Coordinate_X, second_Coordinate_Y);
 
 		//This covers if both of the dots are outside of the rectangle(field)
 		if (!IsInsideRectangle(first_Coordinate_X, second_Coordinate_Y) && !IsInsideRectangle(previous_Coordinate_X, previous_Coordinate_Y)) {
 			previous_Coordinate_X = first_Coordinate_X;
 			previous_Coordinate_Y = second_Coordinate_Y;
-			a++;
 			continue;
 		}
 		//This covers if the previous dot is inside of the rectangle and the current dot is outside
 		if (IsInsideRectangle(previous_Coordinate_X, previous_Coordinate_Y) && !IsInsideRectangle(first_Coordinate_X, second_Coordinate_Y)) {
-			Inclination(previous_Coordinate_Y, previous_Coordinate_X, first_Coordinate_X, second_Coordinate_Y, inclination, eps);
-			Calculating_B(first_Coordinate_X, second_Coordinate_Y, inclination, b);
-			Crossing_Point(right_CP, left_CP, top_CP, bottom_CP, inclination, b);
-			RayMovementAndCoodinatesAdjustment(previous_Coordinate_X, previous_Coordinate_Y, first_Coordinate_X, second_Coordinate_Y, right_CP, left_CP,  top_CP, bottom_CP, temp_C_X, temp_C_Y);
-			X = Calculating_X(first_Coordinate_X, second_Coordinate_Y, previous_Coordinate_X, previous_Coordinate_Y, X, temp_C_X, temp_C_Y);
-			total_Distance += Distance(distance, X);
-			a++;
+
+			total_Distance += callcDistance(previous_Coordinate_X, previous_Coordinate_Y, first_Coordinate_X, second_Coordinate_Y, right_CP, left_CP, top_CP, bottom_CP, temp_C_X, temp_C_Y, eps);
+			previous_Coordinate_X = temp_C_X;
+			previous_Coordinate_Y = temp_C_Y;
 			continue;
 		}
 		//Òhis covers if the previous dot is outside of the rectangle and the current dot is inside
 		if (!IsInsideRectangle(previous_Coordinate_X, previous_Coordinate_Y) && IsInsideRectangle(first_Coordinate_X, second_Coordinate_Y)) {
-			Inclination(previous_Coordinate_Y, previous_Coordinate_X, first_Coordinate_X, second_Coordinate_Y, inclination, eps);
-			Calculating_B(first_Coordinate_X, second_Coordinate_Y, inclination, b);
-			Crossing_Point(right_CP, left_CP, top_CP, bottom_CP, inclination, b);
-			RayMovementAndCoodinatesAdjustment(previous_Coordinate_X, previous_Coordinate_Y, first_Coordinate_X, second_Coordinate_Y, right_CP, left_CP, top_CP, bottom_CP, temp_C_X, temp_C_Y);
-			X = Calculating_X(first_Coordinate_X, second_Coordinate_Y, previous_Coordinate_X, previous_Coordinate_Y, X, temp_C_X, temp_C_Y);
-			total_Distance += Distance(distance, X);
-			a++;
+			total_Distance += callcDistance(previous_Coordinate_X, previous_Coordinate_Y, first_Coordinate_X, second_Coordinate_Y, right_CP, left_CP, top_CP, bottom_CP, temp_C_X, temp_C_Y, eps);
+			previous_Coordinate_X = temp_C_X;
+			previous_Coordinate_Y = temp_C_Y;
 			continue;
 		}
 		//This covers if both dots are inside of the rectangle
 		if (IsInsideRectangle(previous_Coordinate_X, previous_Coordinate_Y) && IsInsideRectangle(first_Coordinate_X, second_Coordinate_Y)) {
-			Inclination(previous_Coordinate_Y, previous_Coordinate_X, first_Coordinate_X, second_Coordinate_Y, inclination, eps);
-			Calculating_B(first_Coordinate_X, second_Coordinate_Y, inclination, b);
-			X = Calculating_X(first_Coordinate_X, second_Coordinate_Y, previous_Coordinate_X, previous_Coordinate_Y, X, temp_C_X, temp_C_Y);
-			total_Distance += Distance(distance, X);
-			a++;
+			temp_C_X = first_Coordinate_X;
+			temp_C_Y = second_Coordinate_Y;
+			float inclination = Inclination(previous_Coordinate_Y, previous_Coordinate_X, first_Coordinate_X, second_Coordinate_Y, eps);
+			float b = Calculating_B(first_Coordinate_X, second_Coordinate_Y, inclination);
+			float X = Calculating_X(first_Coordinate_X, second_Coordinate_Y, previous_Coordinate_X, previous_Coordinate_Y);
+			previous_Coordinate_X = temp_C_X;
+			previous_Coordinate_Y = temp_C_Y;
+			total_Distance += Distance(X);
 			continue;
 		}
 
 		previous_Coordinate_X = first_Coordinate_X;
 		previous_Coordinate_Y = second_Coordinate_Y;
-		a++;
 	}
 
 	cout << "\n" << total_Distance;
@@ -115,7 +114,8 @@ bool IsInsideRectangle(float first_Coordinate_X, float second_Coordinate_Y) {
 
 //Calculates the inclination of the line if the dot is outside of the rectangle(field)
 
-float Inclination(float& previous_Coordinate_Y, float& previous_Coordinate_X, float& first_Coordinate_X, float& second_Coordinate_Y, float& inclination, float eps) {
+float Inclination(float previous_Coordinate_Y, float previous_Coordinate_X, float first_Coordinate_X, float second_Coordinate_Y, float eps) {
+	float inclination = 0;
 	if (abs(first_Coordinate_X - previous_Coordinate_X) < eps) {
 		inclination = 0;
 	}
@@ -126,9 +126,8 @@ float Inclination(float& previous_Coordinate_Y, float& previous_Coordinate_X, fl
 }
 
 //This formula is needed if the line crosses the rectangle (field)
-float Calculating_B(float& first_Coordinate_X, float& second_Coordinate_Y, float& inclination, float& b) {
-	b = second_Coordinate_Y - (inclination * first_Coordinate_X);
-	return b;
+float Calculating_B(float first_Coordinate_X, float second_Coordinate_Y, float inclination) {
+	return second_Coordinate_Y - (inclination * first_Coordinate_X);
 }
 
 //Calculates the different crossing points with the sides of the rectangle
@@ -156,8 +155,8 @@ void Crossing_Point(float& right_CP, float& left_CP, float& top_CP, float& botto
 }
 
 //This will calculate the direction of the ray and adjust the coodinates if needed
-void RayMovementAndCoodinatesAdjustment(float previous_Coordinate_X, float previous_Coordinate_Y, float& first_Coordinate_X, float& second_Coordinate_Y, float right_CP,
- float left_CP, float top_CP, float bottom_CP, float& temp_C_X, float& temp_C_Y) {
+void RayMovementAndCoodinatesAdjustment(float& previous_Coordinate_X, float& previous_Coordinate_Y, float& first_Coordinate_X, float& second_Coordinate_Y, float right_CP,
+	float left_CP, float top_CP, float bottom_CP, float& temp_C_X, float& temp_C_Y) {
 	//This calculates the ray inclination
 	float deltaX = first_Coordinate_X - previous_Coordinate_X;
 	float deltaY = second_Coordinate_Y - previous_Coordinate_Y;
@@ -166,23 +165,23 @@ void RayMovementAndCoodinatesAdjustment(float previous_Coordinate_X, float previ
 	temp_C_Y = second_Coordinate_Y;
 
 	//If the movement of the array is up or down
-	if (deltaX == 0) {
-		if (deltaY > 0) {  
+	if (abs(deltaX) <= eps) {
+		if (deltaY > 0) {
 			first_Coordinate_X = previous_Coordinate_X;
 			second_Coordinate_Y = top_boundary;
 		}
-		else if (deltaY < 0) { 
+		else if (deltaY < 0) {
 			first_Coordinate_X = previous_Coordinate_X;
 			second_Coordinate_Y = bottom_boundary;
 		}
 	}
 	//If the movement of the array is left or right
-	else if (deltaY == 0) {
-		if (deltaX > 0) {  
+	else if (abs(deltaY) <= eps) {
+		if (deltaX > 0) {
 			first_Coordinate_X = right_boundary;
 			second_Coordinate_Y = previous_Coordinate_Y;
 		}
-		else if (deltaX < 0) { 
+		else if (deltaX < 0) {
 			first_Coordinate_X = left_boundary;
 			second_Coordinate_Y = previous_Coordinate_Y;
 		}
@@ -212,6 +211,11 @@ void RayMovementAndCoodinatesAdjustment(float previous_Coordinate_X, float previ
 	}
 	//If the movement is down and to the right
 	else if (deltaX > 0 && deltaY < 0) {
+		if (previous_Coordinate_Y > top_boundary) {
+			previous_Coordinate_X = top_CP;
+			previous_Coordinate_Y = top_boundary;
+			return;
+		}
 		if (right_CP >= bottom_boundary) {
 			first_Coordinate_X = right_boundary;
 			second_Coordinate_Y = right_CP;
@@ -239,15 +243,12 @@ void RayMovementAndCoodinatesAdjustment(float previous_Coordinate_X, float previ
 
 
 //Calculates X and stores the coordinates in another values so they can be used in the next cycle
-float Calculating_X(float& first_Coordinate_X, float& second_Coordinate_Y, float& previous_Coordinate_X, float& previous_Coordinate_Y, float& X, float temp_C_X, float temp_C_Y) {
-	X = pow((previous_Coordinate_X - first_Coordinate_X),2) + pow((previous_Coordinate_Y - second_Coordinate_Y), 2);
-	previous_Coordinate_X = temp_C_X;		//Stores the first coordinates so they can be used again in the next calculation
-	previous_Coordinate_Y =	temp_C_Y;		//Stores the first coordinates so they can be used again in the next calculation
+float Calculating_X(float first_Coordinate_X, float second_Coordinate_Y, float previous_Coordinate_X, float previous_Coordinate_Y) {
+	float X = pow((previous_Coordinate_X - first_Coordinate_X), 2) + pow((previous_Coordinate_Y - second_Coordinate_Y), 2);
 	return sqrt(X);
 }
 
 //Calculates the distance from one point to another point
-float Distance(float& distance, float X) {
-	distance = (((Pi * X) / 2) + X) / 2;
-	return distance;
+float Distance(float X) {
+	return (((Pi * X) / 2) + X) / 2;
 }
